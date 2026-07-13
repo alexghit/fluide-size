@@ -2,7 +2,9 @@
 
 A single-purpose tool that generates fluid CSS `clamp()` values — for typography or spacing that scales smoothly between two viewports.
 
-Vanilla HTML/CSS/JS. No framework, no build step. Fonts (Geist + Geist Mono) are self-hosted in `/fonts`.
+Live at [fluid.hey5.studio](https://fluid.hey5.studio).
+
+Vanilla HTML/CSS/JS, no framework or build step — same setup as [Name a Color](https://colors.hey5.studio) and [Font Convert](https://fonts.hey5.studio). Fonts (Geist + Geist Mono) are self-hosted in `/fonts`.
 
 ## Features
 
@@ -10,30 +12,29 @@ Vanilla HTML/CSS/JS. No framework, no build step. Fonts (Geist + Geist Mono) are
 - Arithmetic in every field (e.g. `18*1.5`, `1440-80`)
 - `rem` or `px` output
 - Shareable URL state — settings are saved to the address bar
-- Keyboard: `⌘/Ctrl + C` to copy, `Esc` to reset
 - Accessibility hint when max < 2× min (WCAG 1.4.4)
 
-## Run locally
+### Shortcuts
 
-Open `index.html` in a browser, or serve the folder:
-
-```
-python3 -m http.server
-```
-
-## Deploy to Cloudflare Pages (via GitHub)
-
-1. Push this folder to a GitHub repo (files at the repo root).
-2. Cloudflare dashboard -> Workers & Pages -> Create -> Pages -> Connect to Git.
-3. Select the repo. Leave Build command empty and set Build output directory to `/`.
-4. Deploy, then add a custom domain under the project's Custom domains tab.
-
-No build step — Cloudflare serves the static files as-is. `_headers` sets caching, `404.html` is the fallback page.
+| Key | Action |
+|---|---|
+| `Cmd/Ctrl` + `C` | Copy the clamp() value |
+| `Esc` | Reset |
 
 ## Files
 
-- `index.html`, `style.css`, `script.js` — the app
-- `fonts/` — self-hosted Geist woff2
-- `icons/` + `site.webmanifest` — favicon, Apple touch icon, PWA icons
-- `_headers` — Cloudflare cache rules
-- `404.html` — fallback (copy of index)
+| File | Purpose |
+|---|---|
+| `index.html`, `style.css`, `script.js` | The app |
+| `fonts/` | Self-hosted Geist woff2 |
+| `icons/` + `site.webmanifest` | Favicon, Apple touch icon, PWA icons |
+| `_headers` | Cloudflare cache rules |
+| `404.html` | Fallback page (copy of index) |
+
+## Deploy
+
+Static site, no build step. Deployed on Cloudflare Pages.
+
+## Credits
+
+Made with ♥ by Alex Ghit — alex@hey5.studio

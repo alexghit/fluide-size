@@ -1,111 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Name a Color</title>
-<meta name="description" content="Enter a hex code and get a color name.">
-<meta name="theme-color" content="#0c0c0e">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fluid Size</title>
+  <meta name="description" content="Generate fluid CSS clamp() values that scale any length between two viewports.">
 
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
-<meta name="apple-mobile-web-app-title" content="Name a Color">
+  <meta property="og:title" content="Fluid Size — CSS clamp() generator">
+  <meta property="og:description" content="Generate fluid CSS clamp() values that scale any length between two viewports.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="theme-color" content="#0b0b0d">
 
-<meta property="og:type" content="website">
-<meta property="og:title" content="Name a Color">
-<meta property="og:description" content="Enter a hex code and get a color name.">
-<meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&family=Geist+Mono:wght@400;500&family=Instrument+Serif&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="is-empty">
+<body>
+  <div class="app">
 
-<div class="glow" id="glow"></div>
+    <header class="topbar">
+      <button class="wordmark" id="wordmark" type="button">Fluid Size</button>
+      <span class="topbar-tag">css clamp()</span>
+    </header>
 
-<header class="topbar">
-  <button id="home" class="wordmark" type="button">Name a Color</button>
-  <div class="topbar-right">
-    <button id="glowToggle" class="glowtoggle" type="button" aria-pressed="true" aria-label="Toggle background glow" title="Toggle glow">
-      <svg class="glow-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="4"></circle>
-        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
-      </svg>
-      <svg class="glow-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="4"></circle>
-        <path d="M12 2v2M2 12h2M20 12h2M12 20v2"></path>
-        <line x1="3" y1="3" x2="21" y2="21"></line>
-      </svg>
-      <span class="glowtoggle-label">Glow</span>
-    </button>
-  </div>
-</header>
+    <main class="stage">
+      <div class="panel">
 
-<main class="stage">
+        <div class="preview-stage">
+          <span class="preview-text" id="previewText" contenteditable="true" spellcheck="false" role="textbox" aria-label="Preview text — click to edit" data-placeholder="Type text…"></span>
+          <div class="preview-element" id="previewElement" hidden></div>
+        </div>
 
-  <div class="swatch" id="swatch"></div>
+        <div class="slider-block">
+          <input type="range" class="range" id="viewportSlider" min="320" max="1440" step="1" value="880" aria-label="Preview viewport width">
+          <div class="slider-labels">
+            <span class="slider-meta">
+              <span>viewport <span class="val" id="viewportLabel">880px</span></span>
+              <span class="slider-sep">·</span>
+              <span>rendered <span class="val" id="renderedLabel">—</span></span>
+            </span>
+            <div class="segmented segmented--sm" role="group" aria-label="Preview mode">
+              <button type="button" class="seg" data-mode="text" aria-pressed="true">Text</button>
+              <button type="button" class="seg" data-mode="element" aria-pressed="false">Element</button>
+            </div>
+          </div>
+        </div>
 
-  <div class="family" id="family"></div>
+        <div class="divider"></div>
 
-  <h1 class="name" id="name" aria-live="polite">name a color</h1>
+        <div class="field-grid">
+          <label class="field">
+            <span class="field-label">Max size</span>
+            <span class="field-input">
+              <input class="num" type="text" id="maxSize" value="0" placeholder="0" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+              <span class="unit">PX</span>
+            </span>
+          </label>
+          <label class="field">
+            <span class="field-label">Min size</span>
+            <span class="field-input">
+              <input class="num" type="text" id="minSize" value="0" placeholder="0" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+              <span class="unit">PX</span>
+            </span>
+          </label>
+        </div>
 
-  <div class="hexwrap">
-    <span class="hash">#</span>
-    <span id="hex" class="hexfield"
-          contenteditable="plaintext-only"
-          role="textbox"
-          aria-label="Hex code"
-          spellcheck="false"
-          autocorrect="off"
-          autocapitalize="off"
-          data-placeholder="000000"></span>
-    <button id="clear" class="clear" type="button" aria-label="Clear" title="Esc to clear">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-           stroke-linecap="round" aria-hidden="true">
-        <line x1="6" y1="6" x2="18" y2="18"></line>
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-      </svg>
-    </button>
-  </div>
+        <div class="field-grid field-grid--gap">
+          <label class="field">
+            <span class="field-label">Max breakpoint</span>
+            <span class="field-input">
+              <input class="num" type="text" id="maxBp" value="1440" placeholder="0" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+              <span class="unit">PX</span>
+            </span>
+          </label>
+          <label class="field">
+            <span class="field-label">Min breakpoint</span>
+            <span class="field-input">
+              <input class="num" type="text" id="minBp" value="320" placeholder="0" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+              <span class="unit">PX</span>
+            </span>
+          </label>
+        </div>
 
-  <div class="meta">
-    <div class="pills">
-      <span class="pill" id="rgb"></span>
-      <span class="pill" id="hsl"></span>
-    </div>
-    <button class="copy" id="copy" type="button">Copy</button>
-  </div>
+        <div class="unit-toggle">
+          <div class="segmented" role="group" aria-label="Output unit">
+            <button type="button" class="seg" data-unit="rem" aria-pressed="true">rem</button>
+            <button type="button" class="seg" data-unit="px" aria-pressed="false">px</button>
+          </div>
+        </div>
 
-  <div class="settings">
-    <div class="group">
-      <div class="grouplabel">Format</div>
-      <div class="segs" id="fmt">
-        <button data-v="title" type="button">Title Case</button>
-        <button data-v="lower" type="button">lowercase</button>
-        <button data-v="dash" type="button">lower-dash</button>
+        <p class="warn" id="warn" role="alert" hidden></p>
+
+        <div class="output-row">
+          <code class="output" id="output">clamp(...)</code>
+          <div class="output-btns">
+            <button type="button" class="clear-btn" id="clearBtn">Clear</button>
+            <button type="button" class="copy-btn" id="copyBtn">Copy to Clipboard</button>
+          </div>
+          <p class="hint"><kbd>⌘/Ctrl</kbd>+<kbd>C</kbd> copy · <kbd>Esc</kbd> clear</p>
+        </div>
+
       </div>
-    </div>
+    </main>
+
+    <footer class="footer">
+      <span>Made with <span class="footer-heart">♥</span> by Alex Ghit</span>
+      <span class="dot">·</span>
+      <a class="footer-link" href="mailto:alex@hey5.studio">alex@hey5.studio</a>
+      <span class="dot">·</span>
+      <a class="footer-link" href="https://developer.mozilla.org/en-US/docs/Web/CSS/clamp" target="_blank" rel="noopener">clamp()</a>
+      <span>generator</span>
+      <span class="dot">·</span>
+      <span class="footer-ver">v2.0</span>
+    </footer>
+
   </div>
 
-  <div class="hint"><kbd>⌘/Ctrl</kbd>+<kbd>C</kbd> copy · <kbd>Esc</kbd> clear</div>
-
-</main>
-
-<footer class="footer">
-  <span>Made with ♥ by Alex Ghit</span>
-  <span class="dot">·</span>
-  <a href="mailto:alex@hey5.studio">alex@hey5.studio</a>
-  <span class="dot">·</span>
-  <span><a href="https://github.com/meodai/color-names" target="_blank" rel="noopener noreferrer">Color names</a> by David Aerne (MIT)</span>
-  <span class="dot">·</span>
-  <span>v2.2</span>
-</footer>
-
-<script src="colors.js"></script>
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fluid Size — CSS clamp() generator</title>
+  <meta name="description" content="Generate fluid CSS clamp() values that scale any length between two viewports.">
+
+  <meta property="og:title" content="Fluid Size — CSS clamp() generator">
+  <meta property="og:description" content="Generate fluid CSS clamp() values that scale any length between two viewports.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="theme-color" content="#0b0b0d">
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20100%22%3E%0A%20%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2222%22%20fill%3D%22%230b0b0d%22/%3E%0A%20%20%3Cpath%20d%3D%22M22%2046%20C30%2062%2C%2040%2062%2C%2050%2052%20C60%2042%2C%2070%2042%2C%2078%2054%22%0A%20%20%20%20%20%20%20%20fill%3D%22none%22%20stroke%3D%22%23f4f4f6%22%20stroke-width%3D%229%22%0A%20%20%20%20%20%20%20%20stroke-linecap%3D%22round%22/%3E%0A%3C/svg%3E%0A">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+/* Tokens */
+:root {
+  --bg: #0b0b0d;
+  --fg: #f2f2f4;
+  --fg-strong: #f4f4f6;
+  --field-bg: #131315;
+  --output-bg: #0e0e10;
+  --mono: 'Geist Mono', ui-monospace, monospace;
+  --sans: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  -webkit-tap-highlight-color: transparent;
+}
+::selection { background: rgba(255,255,255,.18); }
+
+.app {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top bar */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 40px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.5);
+}
+.wordmark {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: rgba(255,255,255,.5);
+  padding: 0;
+  transition: color 200ms;
+}
+.wordmark:hover { color: rgba(255,255,255,.85); }
+.topbar-tag { color: rgba(255,255,255,.28); }
+
+/* Stage */
+.stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 24px 48px;
+}
+.panel {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Preview */
+.segmented {
+  display: flex;
+  gap: 4px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 999px;
+  padding: 4px;
+}
+.seg {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 15px;
+  background: transparent;
+  color: rgba(255,255,255,.55);
+  transition: background 200ms, color 200ms;
+}
+.seg[aria-pressed="true"] {
+  background: #ededf0;
+  color: var(--bg);
+}
+
+.segmented--sm { padding: 3px; gap: 3px; }
+.segmented--sm .seg { font-size: 11px; padding: 5px 11px; }
+
+.preview-stage {
+  height: 190px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+.preview-stage.is-capped::after {
+  content: "preview scaled to fit";
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .04em;
+  color: rgba(255,255,255,.3);
+  pointer-events: none;
+}
+.preview-text {
+  font-weight: 600;
+  color: var(--fg-strong);
+  line-height: .95;
+  letter-spacing: -0.02em;
+  font-size: 56px;
+  outline: none;
+  cursor: text;
+  caret-color: rgba(255,255,255,.6);
+  border-radius: 10px;
+  padding: 0 6px;
+  max-width: 100%;
+  white-space: nowrap;
+  text-align: center;
+  transition: box-shadow 160ms;
+}
+.preview-text:focus { box-shadow: none; }
+.preview-text.is-placeholder-size { color: rgba(255,255,255,.3); }
+.preview-element.is-placeholder-size { opacity: .3; }
+.preview-text:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(255,255,255,.25);
+  font-size: 40px;
+}
+.preview-element {
+  background: #e9e9ec;
+  border-radius: 22%;
+  width: 56px;
+  height: 56px;
+}
+
+/* Slider */
+.slider-block {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  height: 18px;
+  width: 100%;
+}
+.range::-webkit-slider-runnable-track {
+  height: 2px; border-radius: 999px; background: rgba(255,255,255,.16);
+}
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; margin-top: -8px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #ededf0; border: 4px solid var(--bg);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.35);
+}
+.range::-moz-range-track {
+  height: 2px; border-radius: 999px; background: rgba(255,255,255,.16);
+}
+.range::-moz-range-thumb {
+  width: 12px; height: 12px; border: 4px solid var(--bg);
+  border-radius: 50%; background: #ededf0;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.35);
+}
+.range:focus-visible { outline: none; }
+.range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 2px rgba(255,255,255,.7); }
+.range:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px rgba(255,255,255,.7); }
+
+.slider-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: rgba(255,255,255,.5);
+}
+.slider-meta { display: flex; align-items: center; gap: 8px; }
+.slider-sep { opacity: .4; }
+.slider-labels .val { color: var(--fg); }
+
+.divider {
+  height: 1px;
+  background: rgba(255,255,255,.08);
+  margin: 40px 0 36px;
+}
+
+/* Fields */
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.field-grid--gap { margin-top: 18px; }
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.field-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #e8e8ea;
+}
+.field-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--field-bg);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  padding: 14px 16px;
+  transition: border-color 160ms;
+}
+.field-input:focus-within { border-color: rgba(255,255,255,.28); }
+.num {
+  -moz-appearance: textfield;
+  appearance: textfield;
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 20px;
+  letter-spacing: .01em;
+}
+.num::placeholder { color: rgba(255,255,255,.25); }
+.num::-webkit-outer-spin-button,
+.num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.unit {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: rgba(255,255,255,.35);
+}
+
+/* Unit toggle */
+.unit-toggle {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+/* Output */
+.warn {
+  margin-top: 20px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #ffb4a2;
+  background: rgba(255,120,90,.08);
+  border: 1px solid rgba(255,120,90,.25);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.warn[hidden] { display: none; }
+
+.output-row {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.output-btns {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+.clear-btn {
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 500;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 12px;
+  padding: 15px 22px;
+  white-space: nowrap;
+  background: transparent;
+  color: #e8e8ea;
+  transition: border-color 140ms;
+}
+.clear-btn:hover { border-color: rgba(255,255,255,.4); }
+.hint {
+  margin-top: 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: rgba(255,255,255,.3);
+  text-align: center;
+  letter-spacing: .02em;
+}
+.hint kbd {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: rgba(255,255,255,.6);
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.warn a {
+  color: inherit;
+  text-decoration: underline;
+}
+.warn--soft {
+  color: #ffd9a0;
+  background: rgba(255,190,90,.08);
+  border-color: rgba(255,190,90,.25);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.5;
+}
+.warn-text { flex: 1; }
+.warn--soft a { text-decoration: underline; }
+.warn-dismiss {
+  flex-shrink: 0;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: .55;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 2px 4px;
+}
+.warn-dismiss:hover { opacity: 1; }
+.output {
+  width: 100%;
+  background: var(--output-bg);
+  border: 1px dashed rgba(255,255,255,.22);
+  border-radius: 12px;
+  padding: 15px 18px;
+  font-family: var(--mono);
+  font-size: 15px;
+  color: #dcdce0;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.copy-btn {
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 500;
+  border: none;
+  border-radius: 12px;
+  padding: 15px 22px;
+  white-space: nowrap;
+  background: var(--fg-strong);
+  color: var(--bg);
+  box-shadow: none;
+  transition: opacity 180ms, background 140ms, color 140ms, box-shadow 140ms;
+}
+.copy-btn.copied {
+  background: transparent;
+  color: #e8e8ea;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.3);
+}
+
+/* Footer */
+.footer {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 24px 34px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .04em;
+  color: rgba(255,255,255,.3);
+  text-align: center;
+}
+.footer-accent { color: rgba(255,255,255,.5); }
+.footer .dot { opacity: .5; }
+.footer-link {
+  color: rgba(255,255,255,.5);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 140ms;
+}
+.footer-link:hover { color: rgba(255,255,255,.8); }
+.footer-heart { color: inherit; }
+.footer-ver { opacity: .6; }
+
+@media (max-width: 480px) {
+  .topbar { padding: 22px 20px; }
+  .stage { padding: 8px 18px 40px; }
+  .field-grid { gap: 14px; }
+  .field-label { font-size: 14px; }
+  .output-btns { justify-content: stretch; }
+  .output-btns .clear-btn,
+  .output-btns .copy-btn { flex: 1; padding: 14px 16px; }
+  .footer { font-size: 10px; padding: 24px 18px 30px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+</style>
+</head>
+<body>
+  <div class="app">
+
+    <header class="topbar">
+      <button class="wordmark" id="wordmark" type="button">Fluid Size</button>
+      <span class="topbar-tag">css clamp()</span>
+    </header>
+
+    <main class="stage">
+      <div class="panel">
+
+        <div class="preview-stage">
+          <span class="preview-text" id="previewText" contenteditable="true" spellcheck="false" role="textbox" aria-label="Preview text — click to edit" data-placeholder="Type text…"></span>
+          <div class="preview-element" id="previewElement" hidden></div>
+        </div>
+
+        <div class="slider-block">
+          <input type="range" class="range" id="viewportSlider" min="320" max="1440" step="1" value="880" aria-label="Preview viewport width">
+          <div class="slider-labels">
+            <span class="slider-meta">
+              <span>viewport <span class="val" id="viewportLabel">880px</span></span>
+              <span class="slider-sep">·</span>
+              <span>rendered <span class="val" id="renderedLabel">—</span></span>
+            </span>
+            <div class="segmented segmented--sm" role="group" aria-label="Preview mode">
+              <button type="button" class="seg" data-mode="text" aria-pressed="true">Text</button>
+              <button type="button" class="seg" data-mode="element" aria-pressed="false">Element</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field-grid">
+          <label class="field">
+            <span class="field-label">Max size</span>
+            <span class="field-input">
+              <input class="num" type="text" id="maxSize" value="0" placeholder="0" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+              <span class="unit">PX</span>
+            </span>
+          </label>
+          <label class="field">
+            <span class="field-label">Min size</span>
+            <span class="field-input">
+              <input class="num" type="text" id="minSize" value="0" placeholder="0" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+              <span class="unit">PX</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="field-grid field-grid--gap">
+          <label class="field">
+            <span class="field-label">Max breakpoint</span>
+            <span class="field-input">
+              <input class="num" type="text" id="maxBp" value="1440" placeholder="0" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+              <span class="unit">PX</span>
+            </span>
+          </label>
+          <label class="field">
+            <span class="field-label">Min breakpoint</span>
+            <span class="field-input">
+              <input class="num" type="text" id="minBp" value="320" placeholder="0" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+              <span class="unit">PX</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="unit-toggle">
+          <div class="segmented" role="group" aria-label="Output unit">
+            <button type="button" class="seg" data-unit="rem" aria-pressed="true">rem</button>
+            <button type="button" class="seg" data-unit="px" aria-pressed="false">px</button>
+          </div>
+        </div>
+
+        <p class="warn" id="warn" role="alert" hidden></p>
+
+        <div class="output-row">
+          <code class="output" id="output">clamp(...)</code>
+          <div class="output-btns">
+            <button type="button" class="clear-btn" id="clearBtn">Clear</button>
+            <button type="button" class="copy-btn" id="copyBtn">Copy to Clipboard</button>
+          </div>
+          <p class="hint"><kbd>⌘/Ctrl</kbd>+<kbd>C</kbd> copy · <kbd>Esc</kbd> clear</p>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <span>Made with <span class="footer-heart">♥</span> by Alex Ghit</span>
+      <span class="dot">·</span>
+      <a class="footer-link" href="mailto:alex@hey5.studio">alex@hey5.studio</a>
+      <span class="dot">·</span>
+      <a class="footer-link" href="https://developer.mozilla.org/en-US/docs/Web/CSS/clamp" target="_blank" rel="noopener">clamp()</a>
+      <span>generator</span>
+      <span class="dot">·</span>
+      <span class="footer-ver">v2.0</span>
+    </footer>
+
+  </div>
+
+  <script>
+(() => {
+  "use strict";
+
+  const ROOT_FONT_SIZE = 16;
+
+  const DEFAULTS = {
+    minSize: 0, maxSize: 0,
+    minBp: 320, maxBp: 1440,
+    unit: "rem", previewVw: 880, mode: "text",
+  };
+
+  const state = {
+    minSize: 0, maxSize: 0,
+    minBp: 320, maxBp: 1440,
+    unit: "rem",
+    previewVw: 880,
+    mode: "text",
+    copied: false,
+  };
+
+  const el = {
+    previewText: document.getElementById("previewText"),
+    previewElement: document.getElementById("previewElement"),
+    previewStage: document.querySelector(".preview-stage"),
+    slider: document.getElementById("viewportSlider"),
+    viewportLabel: document.getElementById("viewportLabel"),
+    renderedLabel: document.getElementById("renderedLabel"),
+    minSize: document.getElementById("minSize"),
+    maxSize: document.getElementById("maxSize"),
+    minBp: document.getElementById("minBp"),
+    maxBp: document.getElementById("maxBp"),
+    output: document.getElementById("output"),
+    copyBtn: document.getElementById("copyBtn"),
+    clearBtn: document.getElementById("clearBtn"),
+    warn: document.getElementById("warn"),
+    wordmark: document.getElementById("wordmark"),
+    modeButtons: document.querySelectorAll(".seg[data-mode]"),
+    unitButtons: document.querySelectorAll(".seg[data-unit]"),
+  };
+
+  let copyTimer = null;
+  let tipDismissed = false;
+
+  const num = (v) => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+  const fmt = (n) => (!isFinite(n) ? "0" : parseFloat(n.toFixed(3)).toString());
+
+  // Safe arithmetic: evaluates + - * / ( ) and decimals only.
+  // Returns a number, or null if the expression isn't valid.
+  function evalExpr(input) {
+    const src = String(input).trim();
+    if (src === "") return null;
+    if (!/^[0-9+\-*/().\s]+$/.test(src)) return null;
+    let i = 0;
+    const peek = () => src[i];
+    const skip = () => { while (/\s/.test(src[i])) i++; };
+    function parseExpr() {
+      let v = parseTerm();
+      skip();
+      while (peek() === "+" || peek() === "-") {
+        const op = src[i++];
+        const t = parseTerm();
+        v = op === "+" ? v + t : v - t;
+        skip();
+      }
+      return v;
+    }
+    function parseTerm() {
+      let v = parseFactor();
+      skip();
+      while (peek() === "*" || peek() === "/") {
+        const op = src[i++];
+        const f = parseFactor();
+        v = op === "*" ? v * f : v / f;
+        skip();
+      }
+      return v;
+    }
+    function parseFactor() {
+      skip();
+      if (peek() === "+") { i++; return parseFactor(); }
+      if (peek() === "-") { i++; return -parseFactor(); }
+      if (peek() === "(") {
+        i++;
+        const v = parseExpr();
+        skip();
+        if (peek() !== ")") throw new Error("unbalanced");
+        i++;
+        return v;
+      }
+      const m = /^[0-9]*\.?[0-9]+/.exec(src.slice(i));
+      if (!m) throw new Error("expected number");
+      i += m[0].length;
+      return parseFloat(m[0]);
+    }
+    try {
+      const result = parseExpr();
+      skip();
+      if (i !== src.length) return null;
+      return isFinite(result) ? result : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function geom() {
+    const { minSize, maxSize, minBp, maxBp } = state;
+    const span = (maxBp - minBp) || 1;
+    const slopePx = (maxSize - minSize) / span;
+    const slopeVw = slopePx * 100;
+    const interceptPx = minSize - slopePx * minBp;
+    const lo = Math.min(minSize, maxSize);
+    const hi = Math.max(minSize, maxSize);
+    const sizeAt = (vw) => Math.max(lo, Math.min(hi, interceptPx + slopePx * vw));
+    return { slopeVw, interceptPx, sizeAt };
+  }
+
+  // Returns a warning {html} if the inputs won't produce a sane clamp, else null.
+  function problem() {
+    const { minSize, maxSize, minBp, maxBp } = state;
+    if (minBp === maxBp) return { text: "Min and max breakpoint can't be equal." };
+    if (minBp > maxBp) return { text: "Min breakpoint is larger than max breakpoint." };
+    if (minSize === maxSize && minSize !== 0) return { text: "Min and max size are equal — this won't scale." };
+    if (!tipDismissed && minSize > 0 && maxSize > 0 && maxSize < minSize * 2) {
+      return { html: 'For text, keep max ≥ 2× min so users can still zoom to 200%. <a href="https://www.w3.org/WAI/WCAG22/Understanding/resize-text.html" target="_blank" rel="noopener">WCAG 1.4.4</a>', soft: true };
+    }
+    return null;
+  }
+
+  function buildClamp() {
+    const { slopeVw, interceptPx } = geom();
+    const { minSize, maxSize, unit } = state;
+    const lo = Math.min(minSize, maxSize), hi = Math.max(minSize, maxSize);
+    const vwStr = (slopeVw >= 0 ? "+ " : "- ") + fmt(Math.abs(slopeVw)) + "vw";
+    if (unit === "px") {
+      return `clamp(${fmt(lo)}px, ${fmt(interceptPx)}px ${vwStr}, ${fmt(hi)}px)`;
+    }
+    const r = ROOT_FONT_SIZE;
+    return `clamp(${fmt(lo / r)}rem, ${fmt(interceptPx / r)}rem ${vwStr}, ${fmt(hi / r)}rem)`;
+  }
+
+  function render() {
+    const { minBp, maxBp, unit, mode } = state;
+    const lo = Math.min(minBp, maxBp), hi = Math.max(minBp, maxBp);
+    const previewVw = Math.max(lo, Math.min(hi, state.previewVw));
+    state.previewVw = previewVw;
+
+    const sizePx = geom().sizeAt(previewVw);
+    // When no real size is set yet, still show the preview at a readable
+    // default so typed text/element never disappears. The clamp output
+    // always uses the true values.
+    const displayPx = sizePx > 0 ? sizePx : 48;
+
+    // preview mode
+    const isText = mode === "text";
+    el.previewText.hidden = !isText;
+    el.previewElement.hidden = isText;
+
+    if (isText) {
+      const empty = el.previewText.textContent.trim() === "";
+      if (empty) {
+        el.previewText.style.fontSize = "";  // let placeholder use its own size
+        el.previewStage.classList.remove("is-capped");
+      } else {
+        // Measure text at the true size once, then scale down by a ratio so
+        // it always fits — no iterative loop, so no jitter while sliding.
+        const stage = el.previewStage;
+        const maxW = (stage.clientWidth || 400) - 24;
+        const maxH = (stage.clientHeight || 190) - 24;
+        el.previewText.style.fontSize = displayPx + "px";
+        const w = el.previewText.scrollWidth;
+        const h = el.previewText.scrollHeight;
+        const ratio = Math.min(1, maxW / (w || 1), maxH / (h || 1));
+        const shown = displayPx * ratio;
+        el.previewText.style.fontSize = fmt(shown) + "px";
+        el.previewStage.classList.toggle("is-capped", ratio < 0.999);
+      }
+      el.previewText.classList.toggle("is-placeholder-size", sizePx <= 0);
+    } else {
+      const stage = el.previewStage;
+      const cap = Math.min((stage.clientWidth || 400) - 24, (stage.clientHeight || 190) - 24);
+      const shown = Math.min(displayPx, cap);
+      el.previewElement.style.width = fmt(shown) + "px";
+      el.previewElement.style.height = fmt(shown) + "px";
+      el.previewElement.classList.toggle("is-placeholder-size", sizePx <= 0);
+      el.previewStage.classList.toggle("is-capped", shown < displayPx - 0.5);
+    }
+
+    // slider
+    el.slider.min = lo;
+    el.slider.max = hi;
+    if (num(el.slider.value) !== previewVw) el.slider.value = previewVw;
+    el.viewportLabel.textContent = Math.round(previewVw) + "px";
+    el.renderedLabel.textContent = unit === "px"
+      ? fmt(sizePx) + "px"
+      : fmt(sizePx / ROOT_FONT_SIZE) + "rem";
+
+    // toggles
+    el.modeButtons.forEach((b) =>
+      b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+    el.unitButtons.forEach((b) =>
+      b.setAttribute("aria-pressed", String(b.dataset.unit === unit)));
+
+    // warning
+    const msg = problem();
+    el.warn.hidden = !msg;
+    if (msg) {
+      el.warn.classList.toggle("warn--soft", !!msg.soft);
+      if (msg.soft) {
+        el.warn.innerHTML =
+          '<span class="warn-text">' + msg.html + '</span>' +
+          '<button type="button" class="warn-dismiss" aria-label="Dismiss tip">✕</button>';
+        el.warn.querySelector(".warn-dismiss")
+          .addEventListener("click", () => { tipDismissed = true; render(); });
+      } else if (msg.html) {
+        el.warn.innerHTML = msg.html;
+      } else {
+        el.warn.textContent = msg.text;
+      }
+    }
+
+    // output
+    el.output.textContent = buildClamp();
+
+    syncUrl();
+  }
+
+  function copy() {
+    const text = buildClamp();
+    const done = () => {
+      state.copied = true;
+      el.copyBtn.classList.add("copied");
+      el.copyBtn.textContent = "Copied ✓";
+      clearTimeout(copyTimer);
+      copyTimer = setTimeout(() => {
+        state.copied = false;
+        el.copyBtn.classList.remove("copied");
+        el.copyBtn.textContent = "Copy to Clipboard";
+      }, 1600);
+    };
+    const fallback = () => {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      document.body.removeChild(ta);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done, () => { fallback(); done(); });
+    } else { fallback(); done(); }
+  }
+
+  function reset() {
+    Object.assign(state, DEFAULTS);
+    el.minSize.value = DEFAULTS.minSize; el.maxSize.value = DEFAULTS.maxSize;
+    el.minBp.value = DEFAULTS.minBp; el.maxBp.value = DEFAULTS.maxBp;
+    el.previewText.textContent = "";
+    try { history.replaceState(null, "", location.pathname); } catch (e) {}
+    render();
+  }
+
+  // URL state — makes any configuration shareable via the address bar.
+  let urlTimer = null;
+  function syncUrl() {
+    clearTimeout(urlTimer);
+    urlTimer = setTimeout(() => {
+      const p = new URLSearchParams();
+      p.set("min", fmt(state.minSize));
+      p.set("max", fmt(state.maxSize));
+      p.set("minbp", fmt(state.minBp));
+      p.set("maxbp", fmt(state.maxBp));
+      p.set("unit", state.unit);
+      try { history.replaceState(null, "", "?" + p.toString()); } catch (e) {}
+    }, 250);
+  }
+
+  function loadFromUrl() {
+    const p = new URLSearchParams(location.search);
+    if (![...p.keys()].length) return;
+    const n = (k, d) => { const v = parseFloat(p.get(k)); return isFinite(v) ? v : d; };
+    state.minSize = n("min", state.minSize);
+    state.maxSize = n("max", state.maxSize);
+    state.minBp = n("minbp", state.minBp);
+    state.maxBp = n("maxbp", state.maxBp);
+    if (p.get("unit") === "px" || p.get("unit") === "rem") state.unit = p.get("unit");
+    el.minSize.value = fmt(state.minSize);
+    el.maxSize.value = fmt(state.maxSize);
+    el.minBp.value = fmt(state.minBp);
+    el.maxBp.value = fmt(state.maxBp);
+  }
+
+  // Events
+
+  // Each numeric field supports arithmetic like "18*1.5" or "1440-80".
+  // Live typing updates the preview from the evaluated value; pressing
+  // Enter or leaving the field replaces the text with the result.
+  function bindField(input, key) {
+    input.addEventListener("input", () => {
+      // allow only digits and math characters
+      const cleaned = input.value.replace(/[^0-9+\-*/(). ]/g, "");
+      if (cleaned !== input.value) input.value = cleaned;
+      const v = evalExpr(input.value);
+      state[key] = v === null ? num(input.value) : v;
+      render();
+    });
+    const commit = () => {
+      const v = evalExpr(input.value);
+      // invalid or empty → fall back to 0; never negative
+      let val = v === null ? 0 : v;
+      if (val < 0) val = 0;
+      input.value = fmt(val);
+      state[key] = val;
+      render();
+    };
+    input.addEventListener("change", commit);
+    input.addEventListener("blur", commit);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); commit(); input.blur(); }
+      if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : 1;
+        const cur = evalExpr(input.value);
+        const base = cur === null ? 0 : cur;
+        const next = Math.max(0, base + (e.key === "ArrowUp" ? step : -step));
+        input.value = fmt(next);
+        state[key] = next;
+        render();
+      }
+    });
+  }
+
+  bindField(el.maxSize, "maxSize");
+  bindField(el.minSize, "minSize");
+  bindField(el.maxBp, "maxBp");
+  bindField(el.minBp, "minBp");
+
+  el.slider.addEventListener("input", (e) => { state.previewVw = num(e.target.value); render(); });
+
+  el.modeButtons.forEach((b) =>
+    b.addEventListener("click", () => { state.mode = b.dataset.mode; render(); }));
+  el.unitButtons.forEach((b) =>
+    b.addEventListener("click", () => { state.unit = b.dataset.unit; render(); }));
+
+  el.copyBtn.addEventListener("click", copy);
+  el.clearBtn.addEventListener("click", reset);
+  el.wordmark.addEventListener("click", reset);
+
+  // Editable preview text
+  el.previewText.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); el.previewText.blur(); }
+    e.stopPropagation();
+  });
+  el.previewText.addEventListener("input", () => {
+    const t = el.previewText.textContent;
+    if (t.length > 12) {
+      el.previewText.textContent = t.slice(0, 12);
+      // move caret to end after truncating
+      const r = document.createRange();
+      r.selectNodeContents(el.previewText);
+      r.collapse(false);
+      const s = window.getSelection();
+      s.removeAllRanges(); s.addRange(r);
+    }
+    render();
+  });
+  el.previewText.addEventListener("blur", () => {
+    // leave empty so the placeholder shows
+  });
+
+  window.addEventListener("keydown", (e) => {
+    const editing = document.activeElement === el.previewText;
+    const key = (e.key || "").toLowerCase();
+    if ((e.metaKey || e.ctrlKey) && key === "c") {
+      if (editing) return;
+      const sel = (window.getSelection && window.getSelection().toString()) || "";
+      if (sel.trim() !== "") return;
+      e.preventDefault();
+      copy();
+    } else if (key === "escape") {
+      if (editing) { el.previewText.blur(); return; }
+      reset();
+    }
+  });
+
+  window.addEventListener("resize", render);
+
+  loadFromUrl();
+  render();
+  requestAnimationFrame(render); // re-fit once stage has real dimensions
+})();
+
+</script>
+</body>
+</html>

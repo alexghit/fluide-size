@@ -20,6 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 
+  <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -46,7 +47,7 @@
               <span class="slider-sep">·</span>
               <span>rendered <span class="val" id="renderedLabel">—</span></span>
             </span>
-            <div class="segmented segmented--sm" role="group" aria-label="Preview mode">
+            <div class="segs segmented--sm" role="group" aria-label="Preview mode">
               <button type="button" class="seg" data-mode="text" aria-pressed="true">Text</button>
               <button type="button" class="seg" data-mode="element" aria-pressed="false">Element</button>
             </div>
@@ -90,7 +91,7 @@
         </div>
 
         <div class="unit-toggle">
-          <div class="segmented" role="group" aria-label="Output unit">
+          <div class="segs" role="group" aria-label="Output unit">
             <button type="button" class="seg" data-unit="rem" aria-pressed="true">rem</button>
             <button type="button" class="seg" data-unit="px" aria-pressed="false">px</button>
           </div>
@@ -101,8 +102,8 @@
         <div class="output-row">
           <code class="output" id="output">clamp(...)</code>
           <div class="output-btns">
-            <button type="button" class="clear-btn" id="clearBtn">Clear</button>
-            <button type="button" class="copy-btn" id="copyBtn">Copy to Clipboard</button>
+            <button type="button" class="btn-ghost" id="clearBtn">Clear</button>
+            <button type="button" class="btn-primary copy-btn" id="copyBtn">Copy to Clipboard</button>
           </div>
           <p class="hint"><kbd>⌘/Ctrl</kbd>+<kbd>C</kbd> copy · <kbd>Esc</kbd> clear</p>
         </div>

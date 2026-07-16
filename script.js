@@ -6,7 +6,7 @@
   const DEFAULTS = {
     minSize: 0, maxSize: 0,
     minBp: 320, maxBp: 1440,
-    unit: "rem", previewVw: 880, mode: "text",
+    unit: "rem", previewVw: 880, defaultVw: 880, mode: "text",
   };
 
   const state = {
@@ -14,6 +14,9 @@
     minBp: 320, maxBp: 1440,
     unit: "rem",
     previewVw: 880,
+    // the viewport the user typed — what ⟲ returns to. Distinct from
+    // previewVw, which the slider moves freely.
+    defaultVw: 880,
     mode: "text",
     copied: false,
   };
@@ -23,7 +26,8 @@
     previewElement: document.getElementById("previewElement"),
     previewStage: document.querySelector(".preview-stage"),
     slider: document.getElementById("viewportSlider"),
-    viewportLabel: document.getElementById("viewportLabel"),
+    viewportInput: document.getElementById("viewportInput"),
+    viewportReset: document.getElementById("viewportReset"),
     renderedLabel: document.getElementById("renderedLabel"),
     minSize: document.getElementById("minSize"),
     maxSize: document.getElementById("maxSize"),
@@ -44,10 +48,18 @@
   const num = (v) => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
   const fmt = (n) => (!isFinite(n) ? "0" : parseFloat(n.toFixed(3)).toString());
 
+  // Treat x / X / × as multiplication. Only meaningful between two operands,
+  // so a bare "x" or a trailing "12x" stays invalid rather than silently
+  // becoming something else.
+  const normalizeOps = (s) => String(s).replace(/[x×X]/g, "*");
+
   // Safe arithmetic: evaluates + - * / ( ) and decimals only.
   // Returns a number, or null if the expression isn't valid.
+  // Safe arithmetic: evaluates + - * / ( ) and decimals only.
+  // Also accepts x and × as multiplication — common in many locales.
+  // Returns a number, or null if the expression isn't valid.
   function evalExpr(input) {
-    const src = String(input).trim();
+    const src = normalizeOps(String(input).trim());
     if (src === "") return null;
     if (!/^[0-9+\-*/().\s]+$/.test(src)) return null;
     let i = 0;
@@ -189,7 +201,12 @@
     el.slider.min = lo;
     el.slider.max = hi;
     if (num(el.slider.value) !== previewVw) el.slider.value = previewVw;
-    el.viewportLabel.textContent = Math.round(previewVw) + "px";
+    // don't fight the user while they're typing in the field
+    if (document.activeElement !== el.viewportInput) {
+      el.viewportInput.value = Math.round(previewVw);
+    }
+    // ⟲ only earns its place once the preview has moved off their default
+    el.viewportReset.hidden = Math.round(previewVw) === Math.round(state.defaultVw);
     el.renderedLabel.textContent = unit === "px"
       ? fmt(sizePx) + "px"
       : fmt(sizePx / ROOT_FONT_SIZE) + "rem";
@@ -253,6 +270,7 @@
     Object.assign(state, DEFAULTS);
     el.minSize.value = DEFAULTS.minSize; el.maxSize.value = DEFAULTS.maxSize;
     el.minBp.value = DEFAULTS.minBp; el.maxBp.value = DEFAULTS.maxBp;
+    el.viewportInput.value = DEFAULTS.previewVw;
     el.previewText.textContent = "";
     try { history.replaceState(null, "", location.pathname); } catch (e) {}
     render();
@@ -269,6 +287,7 @@
       p.set("minbp", fmt(state.minBp));
       p.set("maxbp", fmt(state.maxBp));
       p.set("unit", state.unit);
+      p.set("vw", fmt(state.defaultVw));
       try { history.replaceState(null, "", "?" + p.toString()); } catch (e) {}
     }, 250);
   }
@@ -282,10 +301,13 @@
     state.minBp = n("minbp", state.minBp);
     state.maxBp = n("maxbp", state.maxBp);
     if (p.get("unit") === "px" || p.get("unit") === "rem") state.unit = p.get("unit");
+    state.defaultVw = n("vw", state.defaultVw);
+    state.previewVw = state.defaultVw;
     el.minSize.value = fmt(state.minSize);
     el.maxSize.value = fmt(state.maxSize);
     el.minBp.value = fmt(state.minBp);
     el.maxBp.value = fmt(state.maxBp);
+    el.viewportInput.value = Math.round(state.defaultVw);
   }
 
   // Events
@@ -295,8 +317,8 @@
   // Enter or leaving the field replaces the text with the result.
   function bindField(input, key) {
     input.addEventListener("input", () => {
-      // allow only digits and math characters
-      const cleaned = input.value.replace(/[^0-9+\-*/(). ]/g, "");
+      // allow only digits and math characters (x/× accepted as multiply)
+      const cleaned = input.value.replace(/[^0-9+\-*/(). x×X]/g, "");
       if (cleaned !== input.value) input.value = cleaned;
       const v = evalExpr(input.value);
       state[key] = v === null ? num(input.value) : v;
@@ -334,6 +356,52 @@
   bindField(el.minBp, "minBp");
 
   el.slider.addEventListener("input", (e) => { state.previewVw = num(e.target.value); render(); });
+
+  // Viewport field — accepts arithmetic like the other inputs. Committing a
+  // value (Enter/blur) makes it the user's default, so ⟲ comes back here.
+  el.viewportInput.addEventListener("input", () => {
+    const cleaned = el.viewportInput.value.replace(/[^0-9+\-*/(). x×X]/g, "");
+    if (cleaned !== el.viewportInput.value) el.viewportInput.value = cleaned;
+    const v = evalExpr(el.viewportInput.value);
+    if (v !== null) { state.previewVw = v; render(); }
+  });
+  const commitViewport = () => {
+    const v = evalExpr(el.viewportInput.value);
+    const lo = Math.min(state.minBp, state.maxBp);
+    const hi = Math.max(state.minBp, state.maxBp);
+    // invalid → fall back to the existing default rather than 0, which
+    // would be a nonsense viewport
+    let val = v === null ? state.defaultVw : v;
+    val = Math.max(lo, Math.min(hi, val));
+    state.previewVw = val;
+    state.defaultVw = val;
+    el.viewportInput.value = Math.round(val);
+    render();
+  };
+  el.viewportInput.addEventListener("change", commitViewport);
+  el.viewportInput.addEventListener("blur", commitViewport);
+  el.viewportInput.addEventListener("keydown", (e) => {
+    e.stopPropagation();
+    if (e.key === "Enter") { e.preventDefault(); commitViewport(); el.viewportInput.blur(); }
+    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      e.preventDefault();
+      const step = e.shiftKey ? 10 : 1;
+      const cur = evalExpr(el.viewportInput.value);
+      const base = cur === null ? state.previewVw : cur;
+      const lo = Math.min(state.minBp, state.maxBp);
+      const hi = Math.max(state.minBp, state.maxBp);
+      const next = Math.max(lo, Math.min(hi, base + (e.key === "ArrowUp" ? step : -step)));
+      el.viewportInput.value = Math.round(next);
+      state.previewVw = next;
+      render();
+    }
+  });
+
+  el.viewportReset.addEventListener("click", () => {
+    state.previewVw = state.defaultVw;
+    el.viewportInput.value = Math.round(state.defaultVw);
+    render();
+  });
 
   el.modeButtons.forEach((b) =>
     b.addEventListener("click", () => { state.mode = b.dataset.mode; render(); }));

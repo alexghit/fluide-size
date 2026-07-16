@@ -1,3 +1,10 @@
+/* ============================================================
+   Alex Ghit — shared design system (base.css)
+   Source of truth for tokens, topbar, buttons, toggles, footer.
+   Drop this into each tool's repo and link it BEFORE the tool's
+   own stylesheet. App-specific CSS overrides only the middle.
+   ============================================================ */
+
 :root{
   /* surfaces */
   --bg:#0c0c0e;

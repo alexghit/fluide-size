@@ -14,8 +14,8 @@
     minBp: 320, maxBp: 1440,
     unit: "rem",
     previewVw: 880,
-    // the viewport the user typed — what ⟲ returns to. Distinct from
-    // previewVw, which the slider moves freely.
+    // the viewport the user typed — what the reset icon returns to. Distinct
+    // from previewVw, which the slider moves freely.
     defaultVw: 880,
     mode: "text",
     copied: false,
@@ -53,8 +53,6 @@
   // becoming something else.
   const normalizeOps = (s) => String(s).replace(/[x×X]/g, "*");
 
-  // Safe arithmetic: evaluates + - * / ( ) and decimals only.
-  // Returns a number, or null if the expression isn't valid.
   // Safe arithmetic: evaluates + - * / ( ) and decimals only.
   // Also accepts x and × as multiplication — common in many locales.
   // Returns a number, or null if the expression isn't valid.
@@ -205,7 +203,7 @@
     if (document.activeElement !== el.viewportInput) {
       el.viewportInput.value = Math.round(previewVw);
     }
-    // ⟲ only earns its place once the preview has moved off their default
+    // reset icon only earns its place once the preview moved off their default
     el.viewportReset.hidden = Math.round(previewVw) === Math.round(state.defaultVw);
     el.renderedLabel.textContent = unit === "px"
       ? fmt(sizePx) + "px"
@@ -237,8 +235,6 @@
 
     // output
     el.output.textContent = buildClamp();
-
-    syncUrl();
   }
 
   function copy() {
@@ -272,42 +268,7 @@
     el.minBp.value = DEFAULTS.minBp; el.maxBp.value = DEFAULTS.maxBp;
     el.viewportInput.value = DEFAULTS.previewVw;
     el.previewText.textContent = "";
-    try { history.replaceState(null, "", location.pathname); } catch (e) {}
     render();
-  }
-
-  // URL state — makes any configuration shareable via the address bar.
-  let urlTimer = null;
-  function syncUrl() {
-    clearTimeout(urlTimer);
-    urlTimer = setTimeout(() => {
-      const p = new URLSearchParams();
-      p.set("min", fmt(state.minSize));
-      p.set("max", fmt(state.maxSize));
-      p.set("minbp", fmt(state.minBp));
-      p.set("maxbp", fmt(state.maxBp));
-      p.set("unit", state.unit);
-      p.set("vw", fmt(state.defaultVw));
-      try { history.replaceState(null, "", "?" + p.toString()); } catch (e) {}
-    }, 250);
-  }
-
-  function loadFromUrl() {
-    const p = new URLSearchParams(location.search);
-    if (![...p.keys()].length) return;
-    const n = (k, d) => { const v = parseFloat(p.get(k)); return isFinite(v) ? v : d; };
-    state.minSize = n("min", state.minSize);
-    state.maxSize = n("max", state.maxSize);
-    state.minBp = n("minbp", state.minBp);
-    state.maxBp = n("maxbp", state.maxBp);
-    if (p.get("unit") === "px" || p.get("unit") === "rem") state.unit = p.get("unit");
-    state.defaultVw = n("vw", state.defaultVw);
-    state.previewVw = state.defaultVw;
-    el.minSize.value = fmt(state.minSize);
-    el.maxSize.value = fmt(state.maxSize);
-    el.minBp.value = fmt(state.minBp);
-    el.maxBp.value = fmt(state.maxBp);
-    el.viewportInput.value = Math.round(state.defaultVw);
   }
 
   // Events
@@ -358,7 +319,8 @@
   el.slider.addEventListener("input", (e) => { state.previewVw = num(e.target.value); render(); });
 
   // Viewport field — accepts arithmetic like the other inputs. Committing a
-  // value (Enter/blur) makes it the user's default, so ⟲ comes back here.
+  // value (Enter/blur) makes it the user's default, so the reset icon comes
+  // back here.
   el.viewportInput.addEventListener("input", () => {
     const cleaned = el.viewportInput.value.replace(/[^0-9+\-*/(). x×X]/g, "");
     if (cleaned !== el.viewportInput.value) el.viewportInput.value = cleaned;
@@ -451,7 +413,6 @@
 
   window.addEventListener("resize", render);
 
-  loadFromUrl();
   render();
   requestAnimationFrame(render); // re-fit once stage has real dimensions
 })();

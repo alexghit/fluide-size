@@ -11,7 +11,6 @@ You give it a size at a small viewport and a size at a large viewport (plus the 
 - **Live preview** — drag the viewport slider (or type an exact width) to see the result rendered at any size, as text or as a boxed element
 - **Arithmetic in every field** — type `18*1.5` or `1440-80` directly instead of pre-computing it
 - **`rem` or `px` output**
-- **Shareable state** — every setting is written to the URL, so a configured link reproduces the exact same clamp
 - **Accessibility check** — flags it when max < 2× min for text, since that can prevent 200% browser zoom (WCAG 1.4.4)
 
 ### Shortcuts
@@ -23,7 +22,7 @@ You give it a size at a small viewport and a size at a large viewport (plus the 
 
 ## How it's built
 
-Vanilla HTML/CSS/JS, no framework or build step — same setup as [Name a Color](https://colors.hey5.studio) and [Font Convert](https://fonts.hey5.studio). `base.css` is the shared design-token stylesheet reused across those tools; `style.css` holds this app's own layout. All state and clamp math live in `script.js`.
+Vanilla HTML/CSS/JS, no framework or build step. `base.css` holds design tokens, `style.css` this app's own layout. All state and clamp math live in `script.js`.
 
 ```
 site/        the deployed app — index.html, 404.html, script.js, style.css,

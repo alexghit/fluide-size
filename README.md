@@ -27,9 +27,6 @@ Vanilla HTML/CSS/JS, no framework or build step. `base.css` holds design tokens,
 ```
 site/        the deployed app — index.html, 404.html, script.js, style.css,
              base.css, icons, manifest, and Cloudflare's _headers
-standalone/  fluid-size-preview.html — a separate, fully self-contained copy
-             of the whole app (CSS and icons inlined), not part of the
-             deployed site, kept for sharing/embedding as a single file
 ```
 
 `wrangler.jsonc` points Cloudflare's asset root at `site/`.

@@ -25,11 +25,14 @@ You give it a size at a small viewport and a size at a large viewport (plus the 
 Vanilla HTML/CSS/JS, no framework or build step. `base.css` holds design tokens, `style.css` this app's own layout. All state and clamp math live in `script.js`.
 
 ```
-site/        the deployed app — index.html, 404.html, script.js, style.css,
+site/        the deployed app — index.html, script.js, style.css,
              base.css, icons, manifest, and Cloudflare's _headers
+standalone/  fluid-size-preview.html — a separate, fully self-contained copy
+             of the whole app (CSS and icons inlined), not part of the
+             deployed site, kept for sharing/embedding as a single file
 ```
 
-`wrangler.jsonc` points Cloudflare's asset root at `site/`.
+`wrangler.jsonc` points Cloudflare's asset root at `site/` and falls back to `index.html` for any unmatched path (`not_found_handling: single-page-application`), since there's nothing else to route to.
 
 ## Credits
 

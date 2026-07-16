@@ -108,6 +108,54 @@
 .slider-sep{opacity:.4}
 .slider-labels .val{color:var(--ink)}
 
+/* Editable viewport field — reads as text until hovered/focused */
+.vp-field{display:inline-flex;align-items:center;gap:5px}
+.vp-input{
+  /* 4ch exactly fits "1440" with no room for padding/caret — size to the
+     content box and add slack so 4-digit values never clip */
+  box-sizing:content-box;
+  width:4.5ch;
+  background:transparent;
+  border:none;
+  border-bottom:1px dashed rgba(255,255,255,.22);
+  outline:none;
+  padding:2px 4px;
+  color:var(--ink);
+  font-family:var(--mono);
+  font-size:12px;
+  text-align:center;
+  transition:border-color 160ms,background 160ms;
+}
+.vp-input:hover{border-bottom-color:rgba(255,255,255,.45)}
+.vp-input:focus{
+  border-bottom-color:rgba(255,255,255,.7);
+  background:rgba(255,255,255,.04);
+  border-radius:4px 4px 0 0;
+}
+.vp-unit{color:var(--muted)}
+.vp-reset{
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  /* comfortable tap target — the glyph alone was far too small to hit */
+  width:22px;
+  height:22px;
+  flex-shrink:0;
+  background:none;
+  border:none;
+  padding:0;
+  margin-left:2px;
+  border-radius:6px;
+  color:var(--muted);
+  transition:color 160ms,background 160ms,transform 220ms var(--ease);
+}
+.vp-reset:hover{color:var(--ink);background:rgba(255,255,255,.07)}
+.vp-reset svg{width:14px;height:14px;display:block}
+.vp-reset:active{transform:rotate(-140deg)}
+.vp-reset[hidden]{display:none}
+.vp-reset:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
 .divider{height:1px;background:var(--line);margin:40px 0 36px}
 
 /* Fields */

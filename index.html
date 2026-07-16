@@ -43,7 +43,20 @@
           <input type="range" class="range" id="viewportSlider" min="320" max="1440" step="1" value="880" aria-label="Preview viewport width">
           <div class="slider-labels">
             <span class="slider-meta">
-              <span>viewport <span class="val" id="viewportLabel">880px</span></span>
+              <span class="vp-field">viewport
+                <input class="vp-input" id="viewportInput" type="text" value="880"
+                       inputmode="text" autocomplete="off" autocapitalize="off"
+                       spellcheck="false" aria-label="Viewport width — sets your default">
+                <span class="vp-unit">px</span>
+                <button type="button" class="vp-reset" id="viewportReset"
+                        aria-label="Back to your default viewport" title="Back to your default" hidden>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/>
+                    <path d="M3 3v5h5"/>
+                  </svg>
+                </button>
+              </span>
               <span class="slider-sep">·</span>
               <span>rendered <span class="val" id="renderedLabel">—</span></span>
             </span>

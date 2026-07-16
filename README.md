@@ -1,18 +1,18 @@
 # Fluid Size
 
-A single-purpose tool that generates fluid CSS `clamp()` values — for typography or spacing that scales smoothly between two viewports.
+A single-purpose tool that generates fluid CSS `clamp()` values — for typography or spacing that scales smoothly between two viewports, instead of jumping at breakpoints.
 
 Live at [fluid.hey5.studio](https://fluid.hey5.studio).
 
-Vanilla HTML/CSS/JS, no framework or build step — same setup as [Name a Color](https://colors.hey5.studio) and [Font Convert](https://fonts.hey5.studio). Fonts (Geist + Geist Mono) are self-hosted in `/fonts`.
+## What it does
 
-## Features
+You give it a size at a small viewport and a size at a large viewport (plus the two breakpoints), and it outputs a single `clamp(min, preferred, max)` value that interpolates between them — the standard fluid-typography technique, without doing the slope/intersect math by hand.
 
-- Live preview (text or element) that scales between your min/max sizes
-- Arithmetic in every field (e.g. `18*1.5`, `1440-80`)
-- `rem` or `px` output
-- Shareable URL state — settings are saved to the address bar
-- Accessibility hint when max < 2× min (WCAG 1.4.4)
+- **Live preview** — drag the viewport slider (or type an exact width) to see the result rendered at any size, as text or as a boxed element
+- **Arithmetic in every field** — type `18*1.5` or `1440-80` directly instead of pre-computing it
+- **`rem` or `px` output**
+- **Shareable state** — every setting is written to the URL, so a configured link reproduces the exact same clamp
+- **Accessibility check** — flags it when max < 2× min for text, since that can prevent 200% browser zoom (WCAG 1.4.4)
 
 ### Shortcuts
 
@@ -21,19 +21,19 @@ Vanilla HTML/CSS/JS, no framework or build step — same setup as [Name a Color]
 | `Cmd/Ctrl` + `C` | Copy the clamp() value |
 | `Esc` | Reset |
 
-## Files
+## How it's built
 
-| File | Purpose |
-|---|---|
-| `index.html`, `style.css`, `script.js` | The app |
-| `fonts/` | Self-hosted Geist woff2 |
-| `icons/` + `site.webmanifest` | Favicon, Apple touch icon, PWA icons |
-| `_headers` | Cloudflare cache rules |
-| `404.html` | Fallback page (copy of index) |
+Vanilla HTML/CSS/JS, no framework or build step — same setup as [Name a Color](https://colors.hey5.studio) and [Font Convert](https://fonts.hey5.studio). `base.css` is the shared design-token stylesheet reused across those tools; `style.css` holds this app's own layout. All state and clamp math live in `script.js`.
 
-## Deploy
+```
+site/        the deployed app — index.html, 404.html, script.js, style.css,
+             base.css, icons, manifest, and Cloudflare's _headers
+standalone/  fluid-size-preview.html — a separate, fully self-contained copy
+             of the whole app (CSS and icons inlined), not part of the
+             deployed site, kept for sharing/embedding as a single file
+```
 
-Static site, no build step. Deployed on Cloudflare Pages.
+`wrangler.jsonc` points Cloudflare's asset root at `site/`.
 
 ## Credits
 

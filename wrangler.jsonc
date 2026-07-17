@@ -1,15 +1,8 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "fluide-size",
   "compatibility_date": "2026-07-13",
-  "observability": {
-    "enabled": true
-  },
   "assets": {
     "directory": "site",
     "not_found_handling": "single-page-application"
-  },
-  "compatibility_flags": [
-    "nodejs_compat"
-  ]
+  }
 }

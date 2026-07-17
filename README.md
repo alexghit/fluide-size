@@ -24,7 +24,12 @@ You give it a size at a small viewport and a size at a large viewport (plus the 
 
 Vanilla HTML/CSS/JS, no framework or build step — the whole app is one self-contained `index.html` with CSS, JS and the favicon inlined.
 
-`wrangler.jsonc` falls back to `index.html` for any unmatched path, since there's nothing else to route to.
+```
+site/   the deployed app — index.html, plus robots.txt, sitemap.xml
+        and icon128.png, which crawlers and link previews fetch by URL
+```
+
+`wrangler.jsonc` points Cloudflare's asset root at `site/` and falls back to `index.html` for any unmatched path, so a wrong URL lands on the app rather than a 404.
 
 ## Credits
 

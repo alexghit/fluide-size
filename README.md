@@ -22,9 +22,9 @@ You give it a size at a small viewport and a size at a large viewport (plus the 
 
 ## How it's built
 
-Vanilla HTML/CSS/JS, no framework or build step — the whole app is one self-contained `site/index.html` with CSS, JS and the favicon inlined.
+Vanilla HTML/CSS/JS, no framework or build step — the whole app is one self-contained `index.html` with CSS, JS and the favicon inlined.
 
-`wrangler.jsonc` points Cloudflare's asset root at `site/` and falls back to `index.html` for any unmatched path, since there's nothing else to route to.
+`wrangler.jsonc` falls back to `index.html` for any unmatched path, since there's nothing else to route to.
 
 ## Credits
 

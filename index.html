@@ -19,13 +19,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
-/* ============================================================
-   Alex Ghit — shared design system (base.css)
-   Source of truth for tokens, topbar, buttons, toggles, footer.
-   Drop this into each tool's repo and link it BEFORE the tool's
-   own stylesheet. App-specific CSS overrides only the middle.
-   ============================================================ */
-
 :root{
   /* surfaces */
   --bg:#0c0c0e;
@@ -214,10 +207,6 @@ button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 @media (prefers-reduced-motion:reduce){
   *{animation:none !important;transition-duration:.01ms !important}
 }
-
-/* Fluid Size — app-specific styles. Shared tokens, topbar,
-   buttons (.btn-primary/.btn-ghost), .segs, .hint and .footer
-   now live in base.css (linked first). */
 
 .app{min-height:100vh;width:100%;display:flex;flex-direction:column}
 
